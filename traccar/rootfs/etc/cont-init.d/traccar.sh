@@ -86,9 +86,12 @@ fi
 
 while IFS= read -r key; do
     if ! entry_exists "${runtime_config}" "${key}"; then
-        value=$(xmlstarlet sel -t -v \
+        if ! value=$(xmlstarlet sel -T -t -v \
             "/properties/entry[@key='${key}'][1]" \
-            "${DEFAULT_CONFIG}" 2>/dev/null)
+            -n \
+            "${DEFAULT_CONFIG}" 2>/dev/null); then
+            bashio::exit.nok "Failed to read default ${key}"
+        fi
         set_entry "${runtime_config}" "${key}" "${value}"
     fi
 done < <(xmlstarlet sel -t -m "/properties/entry[@key]" \
@@ -168,17 +171,23 @@ for key in database.driver database.url; do
     if ! entry_exists "${runtime_config}" "${key}"; then
         bashio::exit.nok "Generated Traccar configuration is missing ${key}"
     fi
-    value=$(xmlstarlet sel -T -t -v \
+    if ! value=$(xmlstarlet sel -T -t -v \
         "/properties/entry[@key='${key}'][last()]" \
-        "${runtime_config}" 2>/dev/null)
+        -n \
+        "${runtime_config}" 2>/dev/null); then
+        bashio::exit.nok "Failed to read generated ${key}"
+    fi
     if [[ -z "${value//[[:space:]]/}" ]]; then
         bashio::exit.nok "Generated Traccar configuration has an empty ${key}"
     fi
 done
 
-value=$(xmlstarlet sel -T -t -v \
+if ! value=$(xmlstarlet sel -T -t -v \
     "/properties/entry[@key='web.port'][last()]" \
-    "${runtime_config}" 2>/dev/null)
+    -n \
+    "${runtime_config}" 2>/dev/null); then
+    bashio::exit.nok "Failed to read generated web.port"
+fi
 if [[ ! "${value}" =~ ^[0-9]+$ ]] \
     || (( 10#${value} < 1 || 10#${value} > 65535 )); then
     bashio::exit.nok "Generated Traccar configuration has an invalid web.port"

@@ -1,6 +1,6 @@
 ---
 name: Traccar 6 (RadMie)
-version: "6.14.5"
+version: "6.14.5.1"
 slug: traccar
 description: Modern GPS Tracking Platform - Traccar 6.14.5
 url: https://github.com/RadMie/addon-traccar

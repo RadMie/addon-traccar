@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.14.5.1
+
+- Fix startup with the internal H2 database when its password is empty.
+- Report runtime configuration read failures instead of exiting silently.
+
 ## 6.14.5
 
 - Upgrade Traccar Server from 6.10.0 to 6.14.5.
