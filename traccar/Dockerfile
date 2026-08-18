@@ -13,47 +13,43 @@ WORKDIR /opt/traccar
 
 # Setup base
 ARG TRACCAR_VERSION="v6.14.5"
+ARG TRACCAR_SHA256="1395ddcab4e9b358829b3a8b1590deea102b2122c78778c6eee86986decfae97"
 RUN \
     apk add --no-cache \
-        mariadb-client=11.4.8-r0 \
-        nginx=1.28.0-r3 \
+        mariadb-client=11.4.12-r0 \
+        nginx=1.28.3-r7 \
         nss=3.114-r0 \
-        openjdk17-jre-headless=17.0.17_p10-r0 \
+        openjdk21-jre-headless=21.0.11_p10-r0 \
         xmlstarlet=1.6.1-r2 \
     \
-    && curl -J -L -o /tmp/traccar.zip \
+    && curl -fsSL --retry 3 -o /tmp/traccar.zip \
       "https://github.com/traccar/traccar/releases/download/${TRACCAR_VERSION}/traccar-other-${TRACCAR_VERSION#v}.zip" \
+    && echo "${TRACCAR_SHA256}  /tmp/traccar.zip" | sha256sum -c - \
     \
     && mkdir -p /opt/traccar \
     && unzip -d /opt/traccar /tmp/traccar.zip \
     \
     && rm -fr /tmp/*
 
-# Build arguments
+# Build arguments supplied by Home Assistant Supervisor and the CI builder
 ARG BUILD_ARCH
-ARG BUILD_DATE
-ARG BUILD_DESCRIPTION
-ARG BUILD_NAME
-ARG BUILD_REF
-ARG BUILD_REPOSITORY
 ARG BUILD_VERSION
 
 # Labels
 LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
+    io.hass.name="Traccar 6 (RadMie)" \
+    io.hass.description="Modern GPS Tracking Platform - Traccar 6.14.5" \
     io.hass.arch="${BUILD_ARCH}" \
-    io.hass.type="addon" \
-    io.hass.version=${BUILD_VERSION} \
-    maintainer="Franck Nijhof <frenck@addons.community>" \
-    org.opencontainers.image.title="${BUILD_NAME}" \
-    org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
-    org.opencontainers.image.vendor="Home Assistant Community Add-ons" \
-    org.opencontainers.image.authors="Franck Nijhof <frenck@addons.community>" \
-    org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://addons.community" \
-    org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
-    org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
-    org.opencontainers.image.created=${BUILD_DATE} \
-    org.opencontainers.image.revision=${BUILD_REF} \
-    org.opencontainers.image.version=${BUILD_VERSION}
+    io.hass.type="app" \
+    io.hass.url="https://github.com/RadMie/addon-traccar" \
+    io.hass.version="${BUILD_VERSION}" \
+    maintainer="RadMie <https://github.com/RadMie>" \
+    org.opencontainers.image.title="Traccar 6 for Home Assistant" \
+    org.opencontainers.image.description="Modern GPS Tracking Platform - Traccar 6.14.5" \
+    org.opencontainers.image.vendor="RadMie" \
+    org.opencontainers.image.authors="RadMie; Franck Nijhof <frenck@addons.community>" \
+    org.opencontainers.image.licenses="MIT AND Apache-2.0" \
+    org.opencontainers.image.url="https://github.com/RadMie/addon-traccar" \
+    org.opencontainers.image.source="https://github.com/RadMie/addon-traccar" \
+    org.opencontainers.image.documentation="https://github.com/RadMie/addon-traccar/blob/main/traccar/DOCS.md" \
+    org.opencontainers.image.version="${BUILD_VERSION}"

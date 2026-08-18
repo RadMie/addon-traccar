@@ -1,9 +1,9 @@
 ---
-name: Traccar
-version: dev
+name: Traccar 6 (RadMie)
+version: "6.14.5"
 slug: traccar
-description: Modern GPS Tracking Platform
-url: https://github.com/hassio-addons/addon-traccar
+description: Modern GPS Tracking Platform - Traccar 6.14.5
+url: https://github.com/RadMie/addon-traccar
 webui: "[PROTO:ssl]://[HOST]:[PORT:80]"
 panel_icon: mdi:car-connected
 startup: services
@@ -18,7 +18,7 @@ ports_description:
   80/tcp: Web interface
 map:
   - addon_config:rw
-  - homeassistant_config:rw
+  - homeassistant_config:ro
   - ssl
 services:
   - mysql:want

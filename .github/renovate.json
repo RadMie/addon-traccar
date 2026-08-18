@@ -8,11 +8,10 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["//Dockerfile$/", "//build.yaml$/"],
+      "managerFilePatterns": ["//Dockerfile$/"],
       "matchStringsStrategy": "any",
       "matchStrings": [
-        "ARG BUILD_FROM=(?<depName>.*?):(?<currentValue>.*?)\\s+",
-        "(aarch64|amd64):\\s[\"']?(?<depName>.*?):(?<currentValue>.*?)[\"']?\\s"
+        "ARG BUILD_FROM=(?<depName>.*?):(?<currentValue>.*?)\\s+"
       ],
       "datasourceTemplate": "docker"
     },
@@ -54,10 +53,11 @@
       "automerge": true
     },
     {
+      "description": "Traccar updates also require a checksum and app version bump",
       "matchDatasources": ["github-releases"],
       "matchDepNames": ["traccar/traccar"],
       "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
+      "automerge": false
     }
   ]
 }

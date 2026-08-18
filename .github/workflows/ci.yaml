@@ -11,6 +11,97 @@ on:
       - synchronize
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  workflows:
-    uses: hassio-addons/workflows/.github/workflows/addon-ci.yaml@main
+  lint:
+    name: Lint app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint app configuration
+        uses: frenck/action-app-linter@b9cfd1bc62ba60d2c4fc96317b5f7ada5923f4a7 # v2.21.1
+        with:
+          path: ./traccar
+
+  prepare:
+    name: Prepare builds
+    runs-on: ubuntu-latest
+    outputs:
+      description: ${{ steps.normalize.outputs.description }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      name: ${{ steps.normalize.outputs.name }}
+      url: ${{ steps.normalize.outputs.url }}
+      version: ${{ steps.normalize.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read app information
+        id: info
+        uses: home-assistant/actions/helpers/info@a7c616ce81ccda50150bf1595786c71b1883fabb
+        with:
+          path: ./traccar
+
+      - name: Normalize app information
+        id: normalize
+        shell: bash
+        run: |
+          description=${{ steps.info.outputs.description }}
+          name=${{ steps.info.outputs.name }}
+          url=${{ steps.info.outputs.url }}
+          version=${{ steps.info.outputs.version }}
+          echo "description=${description}" >> "${GITHUB_OUTPUT}"
+          echo "name=${name}" >> "${GITHUB_OUTPUT}"
+          echo "url=${url}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Prepare architecture matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        with:
+          architectures: ${{ steps.info.outputs.architectures }}
+          image-name: addon-traccar-ci
+          registry-prefix: ghcr.io/radmie
+
+  build:
+    name: Build ${{ matrix.arch }}
+    needs:
+      - lint
+      - prepare
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build app image
+        uses: home-assistant/builder/actions/build-image@4de35182ce1e329181bffcbcc84d33db5e2c7e10 # 2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: ./traccar
+          cosign: false
+          image: ${{ matrix.image }}
+          image-tags: ci-${{ github.sha }}
+          labels: |
+            io.hass.type=app
+            io.hass.name=${{ needs.prepare.outputs.name }}
+            io.hass.description=${{ needs.prepare.outputs.description }}
+            io.hass.url=${{ needs.prepare.outputs.url }}
+          push: false
+          version: ${{ needs.prepare.outputs.version }}

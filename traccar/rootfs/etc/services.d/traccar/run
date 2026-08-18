@@ -10,6 +10,7 @@ bashio::log.info "Starting Traccar server..."
 # Memory settings
 options+=(-Xms256m)
 options+=(-Xmx512m)
+options+=(-XX:+ExitOnOutOfMemoryError)
 
 # Prefer IPv4, because of Hassio general issues with IPv6
 options+=("-Djava.net.preferIPv4Stack=true")
@@ -18,7 +19,7 @@ options+=("-Djava.net.preferIPv4Stack=true")
 options+=(-jar tracker-server.jar)
 
 # Configuration file
-options+=(/config/traccar.xml)
+options+=(/run/traccar.xml)
 
 # Run the Traccar daemon
 cd /opt/traccar || bashio::exit.nok "Failed to switch to Traccar directory"
